@@ -1,25 +1,35 @@
-import tensorflow as tf
+from data_generation2 import load_dataset_soccernet_m, designate_batches, DataGenerator
+from modeling import JerseyNumberRecognition
 
+# json_file_path = 'C:/Users/HassenBELHASSEN/PycharmProjects/sn-jersey-number-annotation/train_annotations.json'
+# base_path = 'C:/Users/HassenBELHASSEN/AppData/Local/Programs/Python/Python311/Lib/site-packages/SoccerNet'
+# additional_images_dir = 'C:/Users/HassenBELHASSEN/Desktop/only_m1'
 
-def train_model_generator(model,train_gen, valid_gen, training_steps, checkpoint_filepath, validation_steps,
-                          epochs=50, batch_size=32, verbose=1):
+json_file_path = 'C:/Users/Administrator/PycharmProjects/jersey_number_recognition/jersey_number/train_annotations.json'
+base_path = 'D:/soccernet_jersey/'
+additional_images_dir = 'D:/soccernet_jersey/'
 
-    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_filepath,
-        save_weights_only=False,
-        monitor='val_loss',
-        mode='min',
-        save_best_only=True)
-    callbacks = [model_checkpoint_callback]
+train_dataset, valid_dataset = load_dataset_soccernet_m(json_file_path, base_path)
+print(f"train", len(train_dataset))
+print(f"valid", len(valid_dataset))
 
-    history = model.fit(
-        train_gen,  # Training generator
-        epochs=epochs,
-        batch_size=batch_size,
-        verbose=verbose,
-        steps_per_epoch=training_steps,
-        validation_data=valid_gen,  # Validation generator
-        validation_steps=validation_steps,  # Number of validation steps
-        callbacks=callbacks
-    )
-    return history
+print(train_dataset[0])
+
+batch_size = 64
+train_batches, num_train_batches = designate_batches(train_dataset, batch_size=batch_size)
+valid_batches, num_valid_batches = designate_batches(valid_dataset, batch_size=batch_size)
+
+print(num_train_batches)
+print(num_valid_batches)
+
+train_gen = DataGenerator(train_batches, batch_size=batch_size, image_size=(64, 64))
+print(train_gen.length)
+valid_gen = DataGenerator(valid_batches, batch_size=batch_size, image_size=(64, 64))
+print(valid_gen.length)
+
+jnr = JerseyNumberRecognition()
+jnr.compile_model()
+history = jnr.train_model_generator(train_gen=train_gen, valid_gen=valid_gen
+                                    , training_steps=train_gen.length, validation_steps=valid_gen.length,
+                                    checkpoint_filepath='models/model_lost_3.keras',
+                                    epochs=10, batch_size=batch_size)

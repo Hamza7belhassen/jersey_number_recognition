@@ -20,20 +20,14 @@ def read_json(json_file):
     return data
 
 
-def load_dataset_soccernet_m(json_file, validation_split=0.2):
-    data = read_json(json_file)
-    base_path = 'C:/Users/HassenBELHASSEN/AppData/Local/Programs/Python/Python311/Lib/site-packages/SoccerNet'
-
+def load_dataset_soccernet_m(json_file_path, base_path, validation_split=0.2):
+    data = read_json(json_file_path)
     dataset = []
-
-    # Group images by directory name (numeric part)
     grouped_data = defaultdict(list)
     for item in data:
         if item['class'] != -1:
             dir_name = item['relative_image_path'].split('/')[3]
             grouped_data[dir_name].append(item)
-
-    # Process images with class != -1
     processed_data = []
     for dir_name, items in grouped_data.items():
         shuffle(items)  # Shuffle items within each directory
